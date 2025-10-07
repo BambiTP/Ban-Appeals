@@ -37,31 +37,17 @@
 <body>
   <div class="app">
     <aside class="left">
-      <div class="controls">
-        <input id="filter" class="search" placeholder="Filter (filename or url)..." />
-      </div>
-
-      <div style="display:flex; gap:8px; align-items:center; margin:8px 0;">
-        <label style="display:flex; gap:6px; align-items:center;">
-          <input type="checkbox" id="openExternal" /> Open remote on click
-        </label>
-        <div class="muted" style="margin-left:auto">Manifest: <code>tickets_html/manifest.json</code></div>
-      </div>
 
       <ul id="ticketList" class="ticket-list" aria-live="polite"></ul>
 
       <footer>
-        Seen items are remembered in this browser. Use the Python generator to create `manifest.json`.
       </footer>
     </aside>
 
     <main class="main">
       <div class="toolbar">
         <div style="font-weight:700">Ticket Preview</div>
-        <div class="muted"> — click a ticket to view</div>
         <div style="margin-left:auto; display:flex; gap:8px;">
-          <button id="markAll" class="btn">Mark all seen</button>
-          <button id="clearSeen" class="btn" style="background:#999">Clear seen</button>
           <button id="openNewTab" class="btn" style="background:#333">Open current</button>
         </div>
       </div>
