@@ -12,21 +12,18 @@
   <style>
     :root { --left-w: 320px; }
 
-    /* Make the app occupy the full viewport and prevent body scrolling */
     html, body {
       height: 100%;
       margin: 0;
     }
 
-    /* App is viewport-height; the left column will scroll internally */
     .app {
       display: flex;
-      height: 100vh;           /* lock to viewport */
-      overflow: hidden;        /* avoid page-level scroll */
+      height: 100vh;
+      overflow: hidden;
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial;
     }
 
-    /* Left column gets internal scrolling */
     .left {
       width: var(--left-w);
       min-width: 180px;
@@ -34,11 +31,11 @@
       padding: 12px;
       box-sizing: border-box;
       background: #fafafa;
-      overflow: auto;         /* <-- independent scroll */
+      overflow: auto;
       -webkit-overflow-scrolling: touch;
+      padding-top: 20px;  /* added margin/padding at top */
     }
 
-    /* Main area grows; keep its own layout and avoid making page scroll */
     .main {
       flex: 1;
       display: flex;
@@ -46,8 +43,8 @@
       gap: 8px;
       padding: 12px;
       box-sizing: border-box;
-      min-width: 0;           /* allow iframe to shrink correctly */
-      overflow: hidden;       /* ensure no outer scroll */
+      min-width: 0;
+      overflow: hidden;
     }
 
     .ticket-list { list-style: none; padding: 0; margin: 0; }
@@ -65,13 +62,12 @@
     .ticket-title { font-weight: 600; font-size: 13px; }
     .ticket-meta { font-size: 12px; color: #666; margin-top: 4px; }
 
-    /* Viewer fills remaining vertical space inside .main */
     .viewer-frame {
       flex: 1;
       border: 1px solid #ddd;
       border-radius: 6px;
       width: 100%;
-      min-height: 0; /* critical so flex child can shrink when needed */
+      min-height: 0;
     }
 
     @media (max-width: 900px) {
@@ -165,10 +161,8 @@ function fetchManifest() {
     });
 }
 
-/* initial load */
 fetchManifest();
 
-/* keyboard nav (j / k) */
 document.addEventListener("keydown", (e) => {
   if (e.key === 'j' || e.key === 'k') {
     const items = Array.from(document.querySelectorAll('.ticket-item'));
