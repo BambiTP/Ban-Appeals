@@ -5,19 +5,16 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Tickets Viewer</title>
 
-  <!-- requested CSS -->
   <link rel="stylesheet" href="static/css/normalize.css">
   <link rel="stylesheet" href="static/css/bootstrap-grid.css">
   <link rel="stylesheet" href="static/css/main.css">
 
   <style>
-    /* UI styles */
     :root { --left-w: 320px; }
     body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; }
     .app { display:flex; min-height:100vh; }
     .left { width: var(--left-w); border-right:1px solid #e6e6e6; padding:12px; box-sizing:border-box; background:#fafafa; overflow:auto; }
     .main { flex:1; padding:12px; display:flex; flex-direction:column; gap:8px; }
-    .controls { display:flex; gap:8px; align-items:center; margin-bottom:6px; }
     .ticket-list { list-style:none; padding:0; margin:0; }
     .ticket-item { padding:10px; border-radius:6px; cursor:pointer; margin-bottom:6px; border:1px solid transparent; }
     .ticket-item:hover { background:#f2f8ff; }
@@ -26,32 +23,16 @@
     .ticket-title { font-weight:600; font-size:13px; }
     .ticket-meta { font-size:12px; color:#666; margin-top:4px; }
     .viewer-frame { flex:1; border:1px solid #ddd; border-radius:6px; width:100%; }
-    .search { flex:1; padding:8px; border-radius:6px; border:1px solid #ddd; }
-    .btn { padding:6px 10px; border-radius:6px; background:#2b90ff; color:white; border:none; cursor:pointer; }
-    .muted { color:#666; font-size:13px; }
-    .toolbar { display:flex; gap:8px; align-items:center; }
-    footer { font-size:12px; color:#666; padding-top:8px; }
     @media (max-width:900px){ .left { width: 40%; } }
   </style>
 </head>
 <body>
   <div class="app">
     <aside class="left">
-
       <ul id="ticketList" class="ticket-list" aria-live="polite"></ul>
-
-      <footer>
-      </footer>
     </aside>
 
     <main class="main">
-      <div class="toolbar">
-        <div style="font-weight:700">Ticket Preview</div>
-        <div style="margin-left:auto; display:flex; gap:8px;">
-          <button id="openNewTab" class="btn" style="background:#333">Open current</button>
-        </div>
-      </div>
-
       <iframe id="viewer" class="viewer-frame" sandbox="allow-same-origin allow-scripts allow-forms"></iframe>
     </main>
   </div>
@@ -67,21 +48,12 @@ let last = localStorage.getItem(LAST_KEY) || null;
 
 const ticketListEl = document.getElementById("ticketList");
 const viewer = document.getElementById("viewer");
-const filterInput = document.getElementById("filter");
-const openExternal = document.getElementById("openExternal");
-const markAllBtn = document.getElementById("markAll");
-const clearSeenBtn = document.getElementById("clearSeen");
-const openNewTabBtn = document.getElementById("openNewTab");
 
-function renderList(q="") {
+function renderList() {
   ticketListEl.innerHTML = "";
-  const query = q.trim().toLowerCase();
 
-  // iterate manifest (already sorted by date descending)
+  // manifest is expected to be sorted already (fetch sorts it)
   manifest.forEach(item => {
-    if (query) {
-      if (!(item.filename.toLowerCase().includes(query) || item.url.toLowerCase().includes(query))) return;
-    }
     const li = document.createElement("li");
     li.className = "ticket-item";
     li.dataset.filename = item.filename;
@@ -102,11 +74,9 @@ function renderList(q="") {
     if (last === item.filename) li.classList.add("active");
 
     li.addEventListener("click", () => {
-      // active UI
       document.querySelectorAll(".ticket-item.active").forEach(x => x.classList.remove("active"));
       li.classList.add("active");
 
-      // mark seen
       if (!seen.has(item.filename)) {
         seen.add(item.filename);
         localStorage.setItem(SEEN_KEY, JSON.stringify([...seen]));
@@ -116,11 +86,7 @@ function renderList(q="") {
       last = item.filename;
       localStorage.setItem(LAST_KEY, last);
 
-      // load either local url or remote (toggle)
-      const src = openExternal.checked ? item.url : item.url;
-      // item.url already points to tickets_html/<filename>
-      viewer.src = src;
-      openNewTabBtn.onclick = () => window.open(src, "_blank");
+      viewer.src = item.url;
     });
 
     ticketListEl.appendChild(li);
@@ -134,11 +100,11 @@ function fetchManifest() {
       return r.json();
     })
     .then(data => {
-      // Expecting array of {filename, date, url}
       // Sort by date descending (newest first)
       manifest = data.slice().sort((a,b) => (b.date || "").localeCompare(a.date || ""));
-      renderList(filterInput.value);
-      // restore last
+      renderList();
+
+      // restore last open ticket if present
       if (last) {
         const el = Array.from(document.querySelectorAll(".ticket-item")).find(it => it.dataset.filename === last);
         if (el) el.click();
@@ -150,23 +116,10 @@ function fetchManifest() {
     });
 }
 
-/* handlers */
-filterInput.addEventListener("input", (e)=> renderList(e.target.value));
-markAllBtn.addEventListener("click", () => {
-  manifest.forEach(it => seen.add(it.filename));
-  localStorage.setItem(SEEN_KEY, JSON.stringify([...seen]));
-  renderList(filterInput.value);
-});
-clearSeenBtn.addEventListener("click", () => {
-  seen.clear();
-  localStorage.setItem(SEEN_KEY, JSON.stringify([]));
-  renderList(filterInput.value);
-});
-
-/* initial fetch */
+/* initial load */
 fetchManifest();
 
-/* keyboard nav */
+/* keyboard nav (j / k) */
 document.addEventListener("keydown", (e) => {
   if (e.key === 'j' || e.key === 'k') {
     const items = Array.from(document.querySelectorAll('.ticket-item'));
